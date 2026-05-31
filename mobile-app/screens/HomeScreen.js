@@ -69,11 +69,15 @@ const HomeScreen = ({ navigation, isEnabled, setIsEnabled }) => {
       .trim();
   };
 
-  // Datum mooier maken
+  // Datum mooier maken naar dag/maand/jaar
   const formatDate = (date) => {
     if (!date) return "";
 
-    return String(date);
+    return new Date(date).toLocaleDateString("nl-BE", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
   };
 
   // Controleren of iets een Webflow reference ID is
@@ -86,10 +90,12 @@ const HomeScreen = ({ navigation, isEnabled, setIsEnabled }) => {
   const getImage = (fieldData) => {
     const image =
       fieldData.image ||
+      fieldData.Image ||
       fieldData.afbeelding ||
+      fieldData.Afbeelding ||
       fieldData["main-image"] ||
-      fieldData.foto ||
-      fieldData.thumbnail ||
+      fieldData["campus-image"] ||
+      fieldData["campus-afbeelding"] ||
       fieldData["hoofdafbeelding"];
 
     if (image?.url) {
