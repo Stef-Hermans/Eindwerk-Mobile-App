@@ -98,55 +98,94 @@ const NewsScreen = ({ navigation, isEnabled }) => {
   };
 
   useEffect(() => {
-    // NIEUWS OPHALEN UIT WEBFLOW
+    // CAMPUSSEN OPHALEN UIT WEBFLOW
     fetch(
-      "https://api.webflow.com/v2/sites/6a145e3f272bd80bb3bf3bd7/collections/6a19fff5ae9607a1996d2707/items",
+      "https://api.webflow.com/v2/sites/6a145e3f272bd80bb3bf3bd7/collections/6a15e32ecd71eefc575a7215/items",
       {
         headers: {
           Authorization:
-            "Bearer 1576a8b1a009c6710ee81292dcc5df6657d82627753fdc3a34e52464c66356f7",
+            "Bearer f24bd791bf8521d74cc19a322de75ba5d59a0d39b3ffc08426f177f7cb87c262",
         },
       },
     )
       .then((res) => res.json())
-      .then((data) =>
-        setNews(
-          (data.items || []).map((item) => ({
-            id: item.id,
+      .then((campusData) => {
+        // Eerst maken we een lijst van alle campussen
+        const campusList = (campusData.items || []).map((item) => ({
+          id: item.id,
+          title: item.fieldData.name,
+          accentColor: getColor(item.fieldData),
+        }));
 
-            // Titel van nieuwsbericht
-            title: item.fieldData.name,
+        // NIEUWS OPHALEN UIT WEBFLOW
+        fetch(
+          "https://api.webflow.com/v2/sites/6a145e3f272bd80bb3bf3bd7/collections/6a19fff5ae9607a1996d2707/items",
+          {
+            headers: {
+              Authorization:
+                "Bearer 1576a8b1a009c6710ee81292dcc5df6657d82627753fdc3a34e52464c66356f7",
+            },
+          },
+        )
+          .then((res) => res.json())
+          .then((newsData) =>
+            setNews(
+              (newsData.items || []).map((item) => {
+                const campusValue =
+                  item.fieldData.campus ||
+                  item.fieldData.locatie ||
+                  item.fieldData["campus-naam"] ||
+                  item.fieldData["campus-2"];
 
-            // Korte tekst voor op de card
-            description:
-              cleanText(item.fieldData["korte-beschrijving"]) ||
-              cleanText(item.fieldData.samenvatting) ||
-              cleanText(item.fieldData.summary) ||
-              "Lees meer over dit nieuwsbericht.",
+                const campusItem = campusList.find(
+                  (campus) => campus.id === campusValue,
+                );
 
-            // Volledige tekst voor detailpagina
-            body:
-              cleanText(item.fieldData["uitgebreide-tekst"]) ||
-              cleanText(item.fieldData["volledige-tekst"]) ||
-              cleanText(item.fieldData.description) ||
-              cleanText(item.fieldData.body),
+                return {
+                  id: item.id,
 
-            // Datum uit Webflow of publicatiedatum
-            date:
-              formatDate(item.fieldData.datum) ||
-              formatDate(item.fieldData.date) ||
-              formatDate(item.lastPublished) ||
-              formatDate(item.createdOn),
+                  // Titel van nieuwsbericht
+                  title: item.fieldData.name,
 
-            // Afbeelding van nieuws
-            image: getImage(item.fieldData),
+                  // Korte tekst voor op de card
+                  description:
+                    cleanText(item.fieldData["korte-beschrijving"]) ||
+                    cleanText(item.fieldData["short-description"]) ||
+                    cleanText(item.fieldData.samenvatting) ||
+                    cleanText(item.fieldData.summary) ||
+                    "Lees meer over dit nieuwsbericht.",
 
-            // Kleur uit Webflow
-            accentColor: getColor(item.fieldData),
-          })),
-        ),
-      )
-      .catch((error) => console.error("Error fetching nieuws:", error));
+                  // Volledige tekst voor detailpagina
+                  body:
+                    cleanText(item.fieldData["uitgebreide-tekst"]) ||
+                    cleanText(item.fieldData["volledige-tekst"]) ||
+                    cleanText(item.fieldData.description) ||
+                    cleanText(item.fieldData.body),
+
+                  // Datum uit Webflow of publicatiedatum
+                  date:
+                    item.fieldData.datum ||
+                    formatDate(item.fieldData.date) ||
+                    formatDate(item.lastPublished) ||
+                    formatDate(item.createdOn),
+
+                  // Afbeelding van nieuws
+                  image: getImage(item.fieldData),
+
+                  // Campusnaam van gekoppelde campus
+                  campus: campusItem ? campusItem.title : "Busleyden Atheneum",
+
+                  // Kleur van gekoppelde campus
+                  accentColor: campusItem
+                    ? campusItem.accentColor
+                    : getColor(item.fieldData),
+                };
+              }),
+            ),
+          )
+          .catch((error) => console.error("Error fetching nieuws:", error));
+      })
+      .catch((error) => console.error("Error fetching campussen:", error));
   }, []);
 
   // Nieuws filteren op zoekterm
