@@ -9,14 +9,14 @@ const NewsCard = ({ title, description, date, image, onPress, isEnabled }) => {
         imageBox: "#111827",
         text: "#f9fafb",
         subText: "#d1d5db",
-        accent: "#0bab77",
+        accent: "#86bc25",
       }
     : {
         card: "#fff",
         imageBox: "#f5f7fb",
         text: "#111827",
         subText: "#6b7280",
-        accent: "#0bab77",
+        accent: "#86bc25",
       };
 
   return (
@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
 
   // Groene knop
   button: {
-    backgroundColor: "#0bab77",
+    backgroundColor: "#86bc25",
     paddingVertical: 12,
     borderRadius: 12,
     alignItems: "center",

@@ -37,7 +37,7 @@ const HomeScreen = ({ navigation, isEnabled, setIsEnabled }) => {
         subText: "#d1d5db",
         border: "#374151",
         inputBackground: "#1f2937",
-        accent: "#0bab77",
+        accent: "#86bc25",
       }
     : {
         background: "#f5f7fb",
@@ -46,8 +46,11 @@ const HomeScreen = ({ navigation, isEnabled, setIsEnabled }) => {
         subText: "#6b7280",
         border: "#d1d5db",
         inputBackground: "#ffffff",
-        accent: "#0bab77",
+        accent: "#86bc25",
       };
+
+  // Standaardkleur van Busleyden
+  const DEFAULT_GREEN = "#86bc25";
 
   // HTML tags verwijderen uit Webflow rich text
   const cleanText = (text) => {
@@ -70,14 +73,10 @@ const HomeScreen = ({ navigation, isEnabled, setIsEnabled }) => {
   const formatDate = (date) => {
     if (!date) return "";
 
-    return new Date(date).toLocaleDateString("nl-BE", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
+    return String(date);
   };
 
-  // Controleren of iets een Webflow ID is
+  // Controleren of iets een Webflow reference ID is
   const isWebflowId = (value) => {
     if (!value) return false;
     return String(value).length > 15 && String(value).startsWith("6a");
@@ -86,13 +85,12 @@ const HomeScreen = ({ navigation, isEnabled, setIsEnabled }) => {
   // Afbeelding zoeken in verschillende mogelijke Webflow velden
   const getImage = (fieldData) => {
     const image =
-      fieldData["main-image"] ||
       fieldData.image ||
       fieldData.afbeelding ||
+      fieldData["main-image"] ||
       fieldData.foto ||
       fieldData.thumbnail ||
-      fieldData["hoofdafbeelding"] ||
-      fieldData["hero-image"];
+      fieldData["hoofdafbeelding"];
 
     if (image?.url) {
       return { uri: image.url };
@@ -101,26 +99,42 @@ const HomeScreen = ({ navigation, isEnabled, setIsEnabled }) => {
     return null;
   };
 
-  // Korte beschrijving zoeken en HTML proper maken
+  // Kleur zoeken in Webflow
+  const getColor = (fieldData) => {
+    return (
+      fieldData.kleur ||
+      fieldData.color ||
+      fieldData.Color ||
+      fieldData.Kleur ||
+      DEFAULT_GREEN
+    );
+  };
+
+  // Korte beschrijving zoeken
   const getDescription = (fieldData, fallback) => {
     return (
+      cleanText(fieldData["korte-beschrijving"]) ||
+      cleanText(fieldData["short-description"]) ||
+      cleanText(fieldData["Korte beschrijving"]) ||
       cleanText(fieldData.description) ||
+      cleanText(fieldData.Description) ||
       cleanText(fieldData.samenvatting) ||
       cleanText(fieldData.summary) ||
-      cleanText(fieldData["post-summary"]) ||
-      cleanText(fieldData["korte-beschrijving"]) ||
       fallback
     );
   };
 
-  // Lange tekst zoeken en HTML proper maken
+  // Lange tekst zoeken
   const getBody = (fieldData) => {
     return (
-      cleanText(fieldData.body) ||
-      cleanText(fieldData["post-body"]) ||
-      cleanText(fieldData["rich-text"]) ||
-      cleanText(fieldData.beschrijving) ||
-      cleanText(fieldData.description)
+      cleanText(fieldData["volledige-uitleg-campus"]) ||
+      cleanText(fieldData["uitgebreide-tekst"]) ||
+      cleanText(fieldData["volledige-tekst"]) ||
+      cleanText(fieldData["wat-houdt-deze-richting-in"]) ||
+      cleanText(fieldData["wat-leer-je"]) ||
+      cleanText(fieldData["toekomstmogelijkheden"]) ||
+      cleanText(fieldData.description) ||
+      cleanText(fieldData.body)
     );
   };
 
@@ -141,17 +155,26 @@ const HomeScreen = ({ navigation, isEnabled, setIsEnabled }) => {
           (data.items || []).map((item) => ({
             id: item.id,
             title: item.fieldData.name,
+
             description: getDescription(
               item.fieldData,
               "Ontdek deze campus van Busleyden Atheneum.",
             ),
+
             body: getBody(item.fieldData),
+
             address:
               item.fieldData.adres ||
               item.fieldData.address ||
               "Zandpoortvest 60, 2800 Mechelen",
+
             email: item.fieldData.email || "info@campus.be",
+
+            // BELANGRIJK: campussen gebruiken image, niet main-image
             image: getImage(item.fieldData),
+
+            // Kleur uit Webflow of standaardgroen
+            accentColor: getColor(item.fieldData),
           })),
         ),
       )
@@ -179,18 +202,25 @@ const HomeScreen = ({ navigation, isEnabled, setIsEnabled }) => {
             return {
               id: item.id,
               title: item.fieldData.name,
+
+              tag: item.fieldData.tag || "",
+
               description: getDescription(
                 item.fieldData,
                 "Ontdek deze opleiding bij Busleyden Atheneum.",
               ),
+
               body: getBody(item.fieldData),
 
-              // Als campus een Webflow ID is, tonen we die niet
+              // Als campus een Webflow reference ID is, tonen we die niet
               campus: isWebflowId(campusValue)
                 ? "Busleyden Atheneum"
                 : campusValue || "Busleyden Atheneum",
 
               image: getImage(item.fieldData),
+
+              // Opleidingen hebben Color in Webflow
+              accentColor: getColor(item.fieldData),
             };
           }),
         ),
@@ -213,13 +243,26 @@ const HomeScreen = ({ navigation, isEnabled, setIsEnabled }) => {
           (data.items || []).map((item) => ({
             id: item.id,
             title: item.fieldData.name,
+
             description: getDescription(
               item.fieldData,
               "Lees meer over dit nieuwsbericht.",
             ),
-            body: getBody(item.fieldData),
-            date: formatDate(item.lastPublished || item.createdOn),
+
+            body:
+              cleanText(item.fieldData["uitgebreide-tekst"]) ||
+              cleanText(item.fieldData["volledige-tekst"]) ||
+              getBody(item.fieldData),
+
+            // Nieuws heeft een veld Datum in Webflow
+            date:
+              item.fieldData.datum ||
+              item.fieldData.date ||
+              formatDate(item.lastPublished || item.createdOn),
+
             image: getImage(item.fieldData),
+
+            accentColor: getColor(item.fieldData),
           })),
         ),
       )
@@ -248,28 +291,39 @@ const HomeScreen = ({ navigation, isEnabled, setIsEnabled }) => {
               id: item.id,
               title: item.fieldData.name,
 
-              // Beschrijving wordt nu proper gemaakt zonder HTML
               description: getDescription(
                 item.fieldData,
                 "Kom langs tijdens dit event.",
               ),
 
-              body: getBody(item.fieldData),
+              body:
+                cleanText(item.fieldData.description) ||
+                cleanText(item.fieldData.Description) ||
+                getBody(item.fieldData),
 
+              // Event Datum is bij jou een reference, dus voorlopig tonen we anders de publicatiedatum
               date:
-                formatDate(item.fieldData.datum) ||
-                formatDate(item.fieldData.date) ||
+                item.fieldData.datum ||
+                item.fieldData.date ||
                 formatDate(item.createdOn),
 
-              // Als locatie een Webflow ID is, tonen we die niet
+              time:
+                item.fieldData["start-en-eind-uur"] ||
+                item.fieldData["Start en eind uur"] ||
+                "",
+
               location: isWebflowId(locationValue)
                 ? "Busleyden Atheneum"
                 : locationValue || "Busleyden Atheneum",
 
               speaker:
                 item.fieldData.spreker ||
-                item.fieldData.speaker ||
+                item.fieldData.Spreker ||
                 "Busleyden Atheneum",
+
+              image: getImage(item.fieldData),
+
+              accentColor: getColor(item.fieldData),
             };
           }),
         ),
@@ -370,8 +424,8 @@ const HomeScreen = ({ navigation, isEnabled, setIsEnabled }) => {
         <Switch
           value={isEnabled}
           onValueChange={() => setIsEnabled(!isEnabled)}
-          trackColor={{ false: "#d1d5db", true: "#34d399" }}
-          thumbColor={isEnabled ? "#0bab77" : "#f4f3f4"}
+          trackColor={{ false: "#d1d5db", true: "#86bc25" }}
+          thumbColor={isEnabled ? "#86bc25" : "#f4f3f4"}
         />
       </View>
 

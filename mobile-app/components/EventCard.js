@@ -15,14 +15,14 @@ const EventCard = ({
         card: "#1f2937",
         text: "#f9fafb",
         subText: "#d1d5db",
-        accent: "#0bab77",
+        accent: "#86bc25",
         dateBox: "#111827",
       }
     : {
         card: "#fff",
         text: "#111827",
         subText: "#6b7280",
-        accent: "#0bab77",
+        accent: "#86bc25",
         dateBox: "#f5f7fb",
       };
 
@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
 
   // Groene knop
   button: {
-    backgroundColor: "#0bab77",
+    backgroundColor: "#86bc25",
     paddingVertical: 12,
     borderRadius: 12,
     alignItems: "center",
