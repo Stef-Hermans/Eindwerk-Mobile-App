@@ -68,6 +68,7 @@ const CampusesScreen = ({ navigation, isEnabled }) => {
       fieldData["main-image"] ||
       fieldData["campus-image"] ||
       fieldData["campus-afbeelding"] ||
+      fieldData["afbeelding-campus"] ||
       fieldData["hoofdafbeelding"];
 
     if (image?.url) {

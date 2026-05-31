@@ -96,6 +96,7 @@ const HomeScreen = ({ navigation, isEnabled, setIsEnabled }) => {
       fieldData["main-image"] ||
       fieldData["campus-image"] ||
       fieldData["campus-afbeelding"] ||
+      fieldData["afbeelding-campus"] ||
       fieldData["hoofdafbeelding"];
 
     if (image?.url) {
@@ -136,12 +137,17 @@ const HomeScreen = ({ navigation, isEnabled, setIsEnabled }) => {
       cleanText(fieldData["volledige-uitleg-campus"]) ||
       cleanText(fieldData["uitgebreide-tekst"]) ||
       cleanText(fieldData["volledige-tekst"]) ||
-      cleanText(fieldData["wat-houdt-deze-richting-in"]) ||
+      cleanText(fieldData["beschrijving"]) ||
       cleanText(fieldData["wat-leer-je"]) ||
       cleanText(fieldData["toekomstmogelijkheden"]) ||
       cleanText(fieldData.description) ||
       cleanText(fieldData.body)
     );
+  };
+
+  // Campus zoeken op basis van een Webflow reference ID
+  const findCampusById = (campusesList, campusId) => {
+    return campusesList.find((campus) => campus.id === campusId);
   };
 
   useEffect(() => {
@@ -156,185 +162,221 @@ const HomeScreen = ({ navigation, isEnabled, setIsEnabled }) => {
       },
     )
       .then((res) => res.json())
-      .then((data) =>
-        setCampuses(
-          (data.items || []).map((item) => ({
-            id: item.id,
-            title: item.fieldData.name,
+      .then((campusData) => {
+        // Eerst maken we een lijst van alle campussen
+        const campusList = (campusData.items || []).map((item) => ({
+          id: item.id,
+          title: item.fieldData.name,
 
-            description: getDescription(
-              item.fieldData,
-              "Ontdek deze campus van Busleyden Atheneum.",
+          description: getDescription(
+            item.fieldData,
+            "Ontdek deze campus van Busleyden Atheneum.",
+          ),
+
+          body: getBody(item.fieldData),
+
+          address:
+            item.fieldData.adres ||
+            item.fieldData.address ||
+            "Zandpoortvest 60, 2800 Mechelen",
+
+          email: item.fieldData.email || "info@campus.be",
+
+          image: getImage(item.fieldData),
+
+          accentColor: getColor(item.fieldData),
+        }));
+
+        setCampuses(campusList);
+
+        // OPLEIDINGEN OPHALEN UIT WEBFLOW
+        fetch(
+          "https://api.webflow.com/v2/sites/6a145e3f272bd80bb3bf3bd7/collections/6a15e871a69c876374767dc9/items",
+          {
+            headers: {
+              Authorization:
+                "Bearer 938cca162f2d846aaea143770e488ce333e0a9052c910633e46949035e1a470a",
+            },
+          },
+        )
+          .then((res) => res.json())
+          .then((programData) => {
+            setPrograms(
+              (programData.items || []).map((item) => {
+                const campusValue =
+                  item.fieldData["campus-2"] ||
+                  item.fieldData.campus ||
+                  item.fieldData.locatie;
+
+                const campusItem = findCampusById(campusList, campusValue);
+
+                return {
+                  id: item.id,
+                  title: item.fieldData.name,
+
+                  tag: item.fieldData.tag || "Opleiding",
+
+                  description: getDescription(
+                    item.fieldData,
+                    "Ontdek deze opleiding bij Busleyden Atheneum.",
+                  ),
+
+                  intro:
+                    cleanText(item.fieldData["beschrijving"]) ||
+                    "Er is nog geen extra informatie beschikbaar.",
+
+                  learning:
+                    cleanText(item.fieldData["wat-leer-je"]) ||
+                    "Er is nog geen extra informatie beschikbaar.",
+
+                  future:
+                    cleanText(item.fieldData.toekomstmogelijkheden) ||
+                    cleanText(item.fieldData["toekomst-mogelijkheden"]) ||
+                    "Er is nog geen extra informatie beschikbaar.",
+
+                  // Campusnaam van de gekoppelde campus
+                  campus: campusItem
+                    ? campusItem.title
+                    : isWebflowId(campusValue)
+                      ? "Busleyden Atheneum"
+                      : campusValue || "Busleyden Atheneum",
+
+                  image: getImage(item.fieldData),
+
+                  // Kleur van de gekoppelde campus
+                  accentColor: campusItem
+                    ? campusItem.accentColor
+                    : getColor(item.fieldData),
+                };
+              }),
+            );
+          })
+          .catch((error) =>
+            console.error("Error fetching opleidingen:", error),
+          );
+
+        // NIEUWS OPHALEN UIT WEBFLOW
+        fetch(
+          "https://api.webflow.com/v2/sites/6a145e3f272bd80bb3bf3bd7/collections/6a19fff5ae9607a1996d2707/items",
+          {
+            headers: {
+              Authorization:
+                "Bearer 1576a8b1a009c6710ee81292dcc5df6657d82627753fdc3a34e52464c66356f7",
+            },
+          },
+        )
+          .then((res) => res.json())
+          .then((newsData) =>
+            setNews(
+              (newsData.items || []).map((item) => {
+                const campusValue =
+                  item.fieldData.campus ||
+                  item.fieldData.locatie ||
+                  item.fieldData["campus-naam"];
+
+                const campusItem = findCampusById(campusList, campusValue);
+
+                return {
+                  id: item.id,
+                  title: item.fieldData.name,
+
+                  description: getDescription(
+                    item.fieldData,
+                    "Lees meer over dit nieuwsbericht.",
+                  ),
+
+                  body:
+                    cleanText(item.fieldData["uitgebreide-tekst"]) ||
+                    cleanText(item.fieldData["volledige-tekst"]) ||
+                    getBody(item.fieldData),
+
+                  date:
+                    item.fieldData.datum ||
+                    item.fieldData.date ||
+                    formatDate(item.lastPublished || item.createdOn),
+
+                  image: getImage(item.fieldData),
+
+                  // Campusnaam van de gekoppelde campus
+                  campus: campusItem ? campusItem.title : "Busleyden Atheneum",
+
+                  // Kleur van de gekoppelde campus
+                  accentColor: campusItem
+                    ? campusItem.accentColor
+                    : getColor(item.fieldData),
+                };
+              }),
             ),
+          )
+          .catch((error) => console.error("Error fetching nieuws:", error));
 
-            body: getBody(item.fieldData),
+        // EVENTS OPHALEN UIT WEBFLOW
+        fetch(
+          "https://api.webflow.com/v2/sites/6a145e3f272bd80bb3bf3bd7/collections/6a15d5f29f4424ca591ca009/items",
+          {
+            headers: {
+              Authorization:
+                "Bearer 698a51cbfdc7ab58ba8f7913b52f2e68750986cd8fc474427c9abd0d48c53e0f",
+            },
+          },
+        )
+          .then((res) => res.json())
+          .then((eventData) =>
+            setEvents(
+              (eventData.items || []).map((item) => {
+                const locationValue =
+                  item.fieldData.locatie ||
+                  item.fieldData.location ||
+                  item.fieldData.campus;
 
-            address:
-              item.fieldData.adres ||
-              item.fieldData.address ||
-              "Zandpoortvest 60, 2800 Mechelen",
+                const campusItem = findCampusById(campusList, locationValue);
 
-            email: item.fieldData.email || "info@campus.be",
+                return {
+                  id: item.id,
+                  title: item.fieldData.name,
 
-            // BELANGRIJK: campussen gebruiken image, niet main-image
-            image: getImage(item.fieldData),
+                  description: getDescription(
+                    item.fieldData,
+                    "Kom langs tijdens dit event.",
+                  ),
 
-            // Kleur uit Webflow of standaardgroen
-            accentColor: getColor(item.fieldData),
-          })),
-        ),
-      )
+                  body:
+                    cleanText(item.fieldData.description) ||
+                    cleanText(item.fieldData.Description) ||
+                    getBody(item.fieldData),
+
+                  date: item.fieldData.datum || "Datum onbekend",
+
+                  time:
+                    item.fieldData["start-en-eind-uur"] ||
+                    item.fieldData["Start en eind uur"] ||
+                    "",
+
+                  // Locatie wordt nu de echte campusnaam
+                  location: campusItem
+                    ? campusItem.title
+                    : isWebflowId(locationValue)
+                      ? "Busleyden Atheneum"
+                      : locationValue || "Busleyden Atheneum",
+
+                  speaker:
+                    item.fieldData.spreker ||
+                    item.fieldData.Spreker ||
+                    "Busleyden Atheneum",
+
+                  image: getImage(item.fieldData),
+
+                  // Kleur van de gekoppelde campus
+                  accentColor: campusItem
+                    ? campusItem.accentColor
+                    : getColor(item.fieldData),
+                };
+              }),
+            ),
+          )
+          .catch((error) => console.error("Error fetching events:", error));
+      })
       .catch((error) => console.error("Error fetching campussen:", error));
-
-    // OPLEIDINGEN OPHALEN UIT WEBFLOW
-    fetch(
-      "https://api.webflow.com/v2/sites/6a145e3f272bd80bb3bf3bd7/collections/6a15e871a69c876374767dc9/items",
-      {
-        headers: {
-          Authorization:
-            "Bearer 938cca162f2d846aaea143770e488ce333e0a9052c910633e46949035e1a470a",
-        },
-      },
-    )
-      .then((res) => res.json())
-      .then((data) =>
-        setPrograms(
-          (data.items || []).map((item) => {
-            const campusValue =
-              item.fieldData.campus ||
-              item.fieldData["campus-naam"] ||
-              item.fieldData.locatie;
-
-            return {
-              id: item.id,
-              title: item.fieldData.name,
-
-              tag: item.fieldData.tag || "",
-
-              description: getDescription(
-                item.fieldData,
-                "Ontdek deze opleiding bij Busleyden Atheneum.",
-              ),
-
-              body: getBody(item.fieldData),
-
-              // Als campus een Webflow reference ID is, tonen we die niet
-              campus: isWebflowId(campusValue)
-                ? "Busleyden Atheneum"
-                : campusValue || "Busleyden Atheneum",
-
-              image: getImage(item.fieldData),
-
-              // Opleidingen hebben Color in Webflow
-              accentColor: getColor(item.fieldData),
-            };
-          }),
-        ),
-      )
-      .catch((error) => console.error("Error fetching opleidingen:", error));
-
-    // NIEUWS OPHALEN UIT WEBFLOW
-    fetch(
-      "https://api.webflow.com/v2/sites/6a145e3f272bd80bb3bf3bd7/collections/6a19fff5ae9607a1996d2707/items",
-      {
-        headers: {
-          Authorization:
-            "Bearer 1576a8b1a009c6710ee81292dcc5df6657d82627753fdc3a34e52464c66356f7",
-        },
-      },
-    )
-      .then((res) => res.json())
-      .then((data) =>
-        setNews(
-          (data.items || []).map((item) => ({
-            id: item.id,
-            title: item.fieldData.name,
-
-            description: getDescription(
-              item.fieldData,
-              "Lees meer over dit nieuwsbericht.",
-            ),
-
-            body:
-              cleanText(item.fieldData["uitgebreide-tekst"]) ||
-              cleanText(item.fieldData["volledige-tekst"]) ||
-              getBody(item.fieldData),
-
-            // Nieuws heeft een veld Datum in Webflow
-            date:
-              item.fieldData.datum ||
-              item.fieldData.date ||
-              formatDate(item.lastPublished || item.createdOn),
-
-            image: getImage(item.fieldData),
-
-            accentColor: getColor(item.fieldData),
-          })),
-        ),
-      )
-      .catch((error) => console.error("Error fetching nieuws:", error));
-
-    // EVENTS OPHALEN UIT WEBFLOW
-    fetch(
-      "https://api.webflow.com/v2/sites/6a145e3f272bd80bb3bf3bd7/collections/6a15d5f29f4424ca591ca009/items",
-      {
-        headers: {
-          Authorization:
-            "Bearer 698a51cbfdc7ab58ba8f7913b52f2e68750986cd8fc474427c9abd0d48c53e0f",
-        },
-      },
-    )
-      .then((res) => res.json())
-      .then((data) =>
-        setEvents(
-          (data.items || []).map((item) => {
-            const locationValue =
-              item.fieldData.locatie ||
-              item.fieldData.location ||
-              item.fieldData.campus;
-
-            return {
-              id: item.id,
-              title: item.fieldData.name,
-
-              description: getDescription(
-                item.fieldData,
-                "Kom langs tijdens dit event.",
-              ),
-
-              body:
-                cleanText(item.fieldData.description) ||
-                cleanText(item.fieldData.Description) ||
-                getBody(item.fieldData),
-
-              // Event Datum is bij jou een reference, dus voorlopig tonen we anders de publicatiedatum
-              date:
-                item.fieldData.datum ||
-                item.fieldData.date ||
-                formatDate(item.createdOn),
-
-              time:
-                item.fieldData["start-en-eind-uur"] ||
-                item.fieldData["Start en eind uur"] ||
-                "",
-
-              location: isWebflowId(locationValue)
-                ? "Busleyden Atheneum"
-                : locationValue || "Busleyden Atheneum",
-
-              speaker:
-                item.fieldData.spreker ||
-                item.fieldData.Spreker ||
-                "Busleyden Atheneum",
-
-              image: getImage(item.fieldData),
-
-              accentColor: getColor(item.fieldData),
-            };
-          }),
-        ),
-      )
-      .catch((error) => console.error("Error fetching events:", error));
 
     // PRODUCTEN OPHALEN UIT WEBFLOW
     fetch(
@@ -482,6 +524,7 @@ const HomeScreen = ({ navigation, isEnabled, setIsEnabled }) => {
           title={campus.title}
           description={campus.description}
           image={campus.image}
+          accentColor={campus.accentColor}
           onPress={() => navigation.navigate("CampusDetail", campus)}
           isEnabled={isEnabled}
         />
@@ -507,6 +550,7 @@ const HomeScreen = ({ navigation, isEnabled, setIsEnabled }) => {
           description={program.description}
           campus={program.campus}
           image={program.image}
+          accentColor={program.accentColor}
           onPress={() => navigation.navigate("ProgramDetail", program)}
           isEnabled={isEnabled}
         />
@@ -532,6 +576,7 @@ const HomeScreen = ({ navigation, isEnabled, setIsEnabled }) => {
           description={item.description}
           date={item.date}
           image={item.image}
+          accentColor={item.accentColor}
           onPress={() => navigation.navigate("NewsDetail", item)}
           isEnabled={isEnabled}
         />
@@ -557,6 +602,7 @@ const HomeScreen = ({ navigation, isEnabled, setIsEnabled }) => {
           description={event.description}
           date={event.date}
           location={event.location}
+          accentColor={event.accentColor}
           onPress={() => navigation.navigate("EventDetail", event)}
           isEnabled={isEnabled}
         />

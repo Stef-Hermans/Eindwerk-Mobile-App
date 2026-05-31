@@ -128,7 +128,7 @@ const ProgramsScreen = ({ navigation, isEnabled }) => {
 
               // Teksten voor detailpagina
               intro:
-                cleanText(item.fieldData["wat-houdt-deze-richting-in"]) ||
+                cleanText(item.fieldData["beschrijving"]) ||
                 "Meer informatie over deze richting volgt binnenkort.",
 
               learning:
@@ -140,7 +140,7 @@ const ProgramsScreen = ({ navigation, isEnabled }) => {
                 "Meer informatie over toekomstmogelijkheden volgt binnenkort.",
 
               body:
-                cleanText(item.fieldData["wat-houdt-deze-richting-in"]) ||
+                cleanText(item.fieldData["beschrijving"]) ||
                 cleanText(item.fieldData["wat-leer-je"]) ||
                 cleanText(item.fieldData["toekomstmogelijkheden"]),
 
