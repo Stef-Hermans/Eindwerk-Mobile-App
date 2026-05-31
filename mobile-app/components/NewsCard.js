@@ -54,10 +54,7 @@ const NewsCard = ({
       </Text>
 
       {/* Knop naar details */}
-      <Pressable
-        style={[styles.button, { backgroundColor: colors.accent }]}
-        onPress={onPress}
-      >
+      <Pressable style={[styles.button]} onPress={onPress}>
         <Text style={styles.buttonText}>Lees meer</Text>
       </Pressable>
     </View>
@@ -122,6 +119,7 @@ const styles = StyleSheet.create({
 
   // Groene knop
   button: {
+    backgroundColor: "#86bc25",
     paddingVertical: 12,
     borderRadius: 12,
     alignItems: "center",
