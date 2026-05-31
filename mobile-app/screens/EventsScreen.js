@@ -105,81 +105,107 @@ const EventsScreen = ({ navigation, isEnabled }) => {
   };
 
   useEffect(() => {
-    // EVENTS OPHALEN UIT WEBFLOW
+    // CAMPUSSEN OPHALEN UIT WEBFLOW
     fetch(
-      "https://api.webflow.com/v2/sites/6a145e3f272bd80bb3bf3bd7/collections/6a15d5f29f4424ca591ca009/items",
+      "https://api.webflow.com/v2/sites/6a145e3f272bd80bb3bf3bd7/collections/6a15e32ecd71eefc575a7215/items",
       {
         headers: {
           Authorization:
-            "Bearer 698a51cbfdc7ab58ba8f7913b52f2e68750986cd8fc474427c9abd0d48c53e0f",
+            "Bearer f24bd791bf8521d74cc19a322de75ba5d59a0d39b3ffc08426f177f7cb87c262",
         },
       },
     )
       .then((res) => res.json())
-      .then((data) =>
-        setEvents(
-          (data.items || []).map((item) => {
-            const locationValue =
-              item.fieldData.locatie ||
-              item.fieldData.location ||
-              item.fieldData.campus;
+      .then((campusData) => {
+        // Eerst maken we een lijst van alle campussen
+        const campusList = (campusData.items || []).map((item) => ({
+          id: item.id,
+          title: item.fieldData.name,
+          accentColor: getColor(item.fieldData),
+        }));
 
-            return {
-              id: item.id,
+        // EVENTS OPHALEN UIT WEBFLOW
+        fetch(
+          "https://api.webflow.com/v2/sites/6a145e3f272bd80bb3bf3bd7/collections/6a15d5f29f4424ca591ca009/items",
+          {
+            headers: {
+              Authorization:
+                "Bearer 698a51cbfdc7ab58ba8f7913b52f2e68750986cd8fc474427c9abd0d48c53e0f",
+            },
+          },
+        )
+          .then((res) => res.json())
+          .then((eventData) =>
+            setEvents(
+              (eventData.items || []).map((item) => {
+                const locationValue =
+                  item.fieldData.locatie ||
+                  item.fieldData.location ||
+                  item.fieldData.campus;
 
-              // Titel van event
-              title: item.fieldData.name,
+                const campusItem = campusList.find(
+                  (campus) => campus.id === locationValue,
+                );
 
-              // Korte beschrijving voor op de card
-              description:
-                cleanText(item.fieldData["korte-beschrijving"]) ||
-                cleanText(item.fieldData.description) ||
-                cleanText(item.fieldData.Description) ||
-                "Kom langs tijdens dit event.",
+                return {
+                  id: item.id,
 
-              // Volledige tekst voor detailpagina
-              body:
-                cleanText(item.fieldData.description) ||
-                cleanText(item.fieldData.Description) ||
-                cleanText(item.fieldData.body),
+                  // Titel van event
+                  title: item.fieldData.name,
 
-              // Datum uit Webflow
-              // FormatDate zorgt ervoor dat uur/minuten verdwijnen
-              date:
-                formatDate(item.fieldData.datum) ||
-                formatDate(item.fieldData.date) ||
-                formatDate(item.fieldData["event-datum"]) ||
-                formatDate(item.createdOn),
+                  // Korte beschrijving voor op de card
+                  description:
+                    cleanText(item.fieldData["short-description"]) ||
+                    cleanText(item.fieldData["korte-beschrijving"]) ||
+                    cleanText(item.fieldData.description) ||
+                    cleanText(item.fieldData.Description) ||
+                    "Kom langs tijdens dit event.",
 
-              // Start- en einduur
-              time:
-                item.fieldData["start-en-eind-uur"] ||
-                item.fieldData["start-eind-uur"] ||
-                item.fieldData.uur ||
-                "",
+                  // Volledige tekst voor detailpagina
+                  body:
+                    cleanText(item.fieldData.description) ||
+                    cleanText(item.fieldData.Description) ||
+                    cleanText(item.fieldData.body),
 
-              // Locatie, maar geen Webflow ID tonen
-              location: isWebflowId(locationValue)
-                ? "Busleyden Atheneum"
-                : locationValue || "Busleyden Atheneum",
+                  // Datum uit Webflow
+                  // Je hebt dit als tekstveld toegevoegd, dus niet formatteren
+                  date: item.fieldData.datum || "Datum onbekend",
 
-              // Spreker of verantwoordelijke
-              speaker:
-                item.fieldData.spreker ||
-                item.fieldData.Spreker ||
-                item.fieldData.verantwoordelijke ||
-                "Busleyden Atheneum",
+                  // Start- en einduur
+                  time:
+                    item.fieldData["start-en-eind-uur"] ||
+                    item.fieldData["start-eind-uur"] ||
+                    item.fieldData.uur ||
+                    "",
 
-              // Afbeelding
-              image: getImage(item.fieldData),
+                  // Locatie wordt nu de echte campusnaam
+                  location: campusItem
+                    ? campusItem.title
+                    : isWebflowId(locationValue)
+                      ? "Busleyden Atheneum"
+                      : locationValue || "Busleyden Atheneum",
 
-              // Kleur uit Webflow
-              accentColor: getColor(item.fieldData),
-            };
-          }),
-        ),
-      )
-      .catch((error) => console.error("Error fetching events:", error));
+                  // Spreker of verantwoordelijke
+                  speaker:
+                    item.fieldData.spreker ||
+                    item.fieldData.Spreker ||
+                    item.fieldData.verantwoordelijke ||
+                    "Busleyden Atheneum",
+
+                  // Afbeelding
+                  image: getImage(item.fieldData),
+
+                  // Kleur van de gekoppelde campus
+                  accentColor: campusItem
+                    ? campusItem.accentColor
+                    : getColor(item.fieldData),
+                };
+              }),
+            ),
+          )
+          .catch((error) => console.error("Error fetching events:", error));
+      })
+      .catch((error) => console.error("Error fetching campussen:", error));
   }, []);
 
   // Events filteren op zoekterm
