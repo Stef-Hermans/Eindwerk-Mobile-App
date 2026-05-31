@@ -93,72 +93,104 @@ const ProgramsScreen = ({ navigation, isEnabled }) => {
   };
 
   useEffect(() => {
-    // OPLEIDINGEN OPHALEN UIT WEBFLOW
+    // CAMPUSSEN OPHALEN UIT WEBFLOW
     fetch(
-      "https://api.webflow.com/v2/sites/6a145e3f272bd80bb3bf3bd7/collections/6a15e871a69c876374767dc9/items",
+      "https://api.webflow.com/v2/sites/6a145e3f272bd80bb3bf3bd7/collections/6a15e32ecd71eefc575a7215/items",
       {
         headers: {
           Authorization:
-            "Bearer 938cca162f2d846aaea143770e488ce333e0a9052c910633e46949035e1a470a",
+            "Bearer f24bd791bf8521d74cc19a322de75ba5d59a0d39b3ffc08426f177f7cb87c262",
         },
       },
     )
       .then((res) => res.json())
-      .then((data) =>
-        setPrograms(
-          (data.items || []).map((item) => {
-            const campusValue =
-              item.fieldData.campus ||
-              item.fieldData["campus-naam"] ||
-              item.fieldData.locatie;
+      .then((campusData) => {
+        // Eerst maken we een lijst van alle campussen
+        const campusList = (campusData.items || []).map((item) => ({
+          id: item.id,
+          title: item.fieldData.name,
+          accentColor: getColor(item.fieldData),
+        }));
 
-            return {
-              id: item.id,
+        // OPLEIDINGEN OPHALEN UIT WEBFLOW
+        fetch(
+          "https://api.webflow.com/v2/sites/6a145e3f272bd80bb3bf3bd7/collections/6a15e871a69c876374767dc9/items",
+          {
+            headers: {
+              Authorization:
+                "Bearer 938cca162f2d846aaea143770e488ce333e0a9052c910633e46949035e1a470a",
+            },
+          },
+        )
+          .then((res) => res.json())
+          .then((programData) =>
+            setPrograms(
+              (programData.items || []).map((item) => {
+                const campusValue =
+                  item.fieldData["campus-2"] ||
+                  item.fieldData.campus ||
+                  item.fieldData["campus-naam"] ||
+                  item.fieldData.locatie;
 
-              // Naam van opleiding
-              title: item.fieldData.name,
+                const campusItem = campusList.find(
+                  (campus) => campus.id === campusValue,
+                );
 
-              // Tag van opleiding
-              tag: item.fieldData.tag || "Opleiding",
+                return {
+                  id: item.id,
 
-              // Korte beschrijving voor op de card
-              description:
-                cleanText(item.fieldData["korte-beschrijving"]) ||
-                "Ontdek deze opleiding bij Busleyden Atheneum.",
+                  // Naam van opleiding
+                  title: item.fieldData.name,
 
-              // Teksten voor detailpagina
-              intro:
-                cleanText(item.fieldData["beschrijving"]) ||
-                "Meer informatie over deze richting volgt binnenkort.",
+                  // Tag van opleiding
+                  tag: item.fieldData.tag || "Opleiding",
 
-              learning:
-                cleanText(item.fieldData["wat-leer-je"]) ||
-                "Meer informatie over wat je leert volgt binnenkort.",
+                  // Korte beschrijving voor op de card
+                  description:
+                    cleanText(item.fieldData["korte-beschrijving"]) ||
+                    "Ontdek deze opleiding bij Busleyden Atheneum.",
 
-              future:
-                cleanText(item.fieldData["toekomstmogelijkheden"]) ||
-                "Meer informatie over toekomstmogelijkheden volgt binnenkort.",
+                  // Teksten voor detailpagina
+                  intro:
+                    cleanText(item.fieldData["beschrijving"]) ||
+                    "Meer informatie over deze richting volgt binnenkort.",
 
-              body:
-                cleanText(item.fieldData["beschrijving"]) ||
-                cleanText(item.fieldData["wat-leer-je"]) ||
-                cleanText(item.fieldData["toekomstmogelijkheden"]),
+                  learning:
+                    cleanText(item.fieldData["wat-leer-je"]) ||
+                    "Meer informatie over wat je leert volgt binnenkort.",
 
-              // Als campus een Webflow reference ID is, tonen we die niet
-              campus: isWebflowId(campusValue)
-                ? "Busleyden Atheneum"
-                : campusValue || "Busleyden Atheneum",
+                  future:
+                    cleanText(item.fieldData["toekomstmogelijkheden"]) ||
+                    "Meer informatie over toekomstmogelijkheden volgt binnenkort.",
 
-              // Afbeelding van opleiding
-              image: getImage(item.fieldData),
+                  body:
+                    cleanText(item.fieldData["beschrijving"]) ||
+                    cleanText(item.fieldData["wat-leer-je"]) ||
+                    cleanText(item.fieldData["toekomstmogelijkheden"]),
 
-              // Kleur uit Webflow
-              accentColor: getColor(item.fieldData),
-            };
-          }),
-        ),
-      )
-      .catch((error) => console.error("Error fetching opleidingen:", error));
+                  // Campusnaam van gekoppelde campus
+                  campus: campusItem
+                    ? campusItem.title
+                    : isWebflowId(campusValue)
+                      ? "Busleyden Atheneum"
+                      : campusValue || "Busleyden Atheneum",
+
+                  // Afbeelding van opleiding
+                  image: getImage(item.fieldData),
+
+                  // Kleur van gekoppelde campus
+                  accentColor: campusItem
+                    ? campusItem.accentColor
+                    : getColor(item.fieldData),
+                };
+              }),
+            ),
+          )
+          .catch((error) =>
+            console.error("Error fetching opleidingen:", error),
+          );
+      })
+      .catch((error) => console.error("Error fetching campussen:", error));
   }, []);
 
   // Opleidingen filteren op zoekterm
