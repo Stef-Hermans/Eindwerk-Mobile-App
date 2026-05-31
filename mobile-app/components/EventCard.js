@@ -7,6 +7,7 @@ const EventCard = ({
   date,
   location,
   onPress,
+  accentColor = "#86bc25",
   isEnabled,
 }) => {
   // Kleurenset van de eventcard voor light mode / dark mode
@@ -15,14 +16,14 @@ const EventCard = ({
         card: "#1f2937",
         text: "#f9fafb",
         subText: "#d1d5db",
-        accent: "#86bc25",
+        accent: accentColor,
         dateBox: "#111827",
       }
     : {
         card: "#fff",
         text: "#111827",
         subText: "#6b7280",
-        accent: "#86bc25",
+        accent: accentColor,
         dateBox: "#f5f7fb",
       };
 
@@ -52,7 +53,10 @@ const EventCard = ({
       </Text>
 
       {/* Knop naar details */}
-      <Pressable style={styles.button} onPress={onPress}>
+      <Pressable
+        style={[styles.button, { backgroundColor: colors.accent }]}
+        onPress={onPress}
+      >
         <Text style={styles.buttonText}>Bekijk event</Text>
       </Pressable>
     </View>
@@ -117,7 +121,6 @@ const styles = StyleSheet.create({
 
   // Groene knop
   button: {
-    backgroundColor: "#86bc25",
     paddingVertical: 12,
     borderRadius: 12,
     alignItems: "center",

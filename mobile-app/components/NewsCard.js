@@ -1,7 +1,15 @@
 import React from "react";
 import { View, Text, Image, Pressable, StyleSheet } from "react-native";
 
-const NewsCard = ({ title, description, date, image, onPress, isEnabled }) => {
+const NewsCard = ({
+  title,
+  description,
+  date,
+  image,
+  onPress,
+  accentColor = "#86bc25",
+  isEnabled,
+}) => {
   // Kleurenset van de nieuwscard voor light mode / dark mode
   const colors = isEnabled
     ? {
@@ -9,14 +17,14 @@ const NewsCard = ({ title, description, date, image, onPress, isEnabled }) => {
         imageBox: "#111827",
         text: "#f9fafb",
         subText: "#d1d5db",
-        accent: "#86bc25",
+        accent: accentColor,
       }
     : {
         card: "#fff",
         imageBox: "#f5f7fb",
         text: "#111827",
         subText: "#6b7280",
-        accent: "#86bc25",
+        accent: accentColor,
       };
 
   return (
@@ -46,7 +54,10 @@ const NewsCard = ({ title, description, date, image, onPress, isEnabled }) => {
       </Text>
 
       {/* Knop naar details */}
-      <Pressable style={styles.button} onPress={onPress}>
+      <Pressable
+        style={[styles.button, { backgroundColor: colors.accent }]}
+        onPress={onPress}
+      >
         <Text style={styles.buttonText}>Lees meer</Text>
       </Pressable>
     </View>
@@ -111,7 +122,6 @@ const styles = StyleSheet.create({
 
   // Groene knop
   button: {
-    backgroundColor: "#86bc25",
     paddingVertical: 12,
     borderRadius: 12,
     alignItems: "center",

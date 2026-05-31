@@ -7,6 +7,7 @@ const ProgramCard = ({
   campus,
   image,
   onPress,
+  accentColor = "#86bc25",
   isEnabled,
 }) => {
   // Kleurenset van de opleidingcard voor light mode / dark mode
@@ -16,14 +17,14 @@ const ProgramCard = ({
         imageBox: "#111827",
         text: "#f9fafb",
         subText: "#d1d5db",
-        accent: "#86bc25",
+        accent: accentColor,
       }
     : {
         card: "#fff",
         imageBox: "#f5f7fb",
         text: "#111827",
         subText: "#6b7280",
-        accent: "#86bc25",
+        accent: accentColor,
       };
 
   return (
@@ -58,7 +59,10 @@ const ProgramCard = ({
       </Text>
 
       {/* Knop naar details */}
-      <Pressable style={styles.button} onPress={onPress}>
+      <Pressable
+        style={[styles.button, { backgroundColor: colors.accent }]}
+        onPress={onPress}
+      >
         <Text style={styles.buttonText}>Bekijk opleiding</Text>
       </Pressable>
     </View>
@@ -131,7 +135,6 @@ const styles = StyleSheet.create({
 
   // Groene knop
   button: {
-    backgroundColor: "#86bc25",
     paddingVertical: 12,
     borderRadius: 12,
     alignItems: "center",
