@@ -1,6 +1,7 @@
 import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View, Pressable, Alert } from "react-native";
+import { StyleSheet, Text, View, Pressable, Alert, Image } from "react-native";
 import { useEffect, useState } from "react";
+import docentFoto from "../images/docent.jpg";
 
 const GameScreen = ({ isEnabled }) => {
   // State voor score, tijd en actief vakje
@@ -13,17 +14,13 @@ const GameScreen = ({ isEnabled }) => {
   const defaultGreen = "#86bc25";
 
   // Namen van docenten voor in de vakjes
-  const teachers = [
-    "Mevr. Peeters",
-    "Dhr. Janssens",
-    "Mevr. De Vos",
-    "Dhr. Willems",
-    "Mevr. Claes",
-    "Dhr. Smet",
-    "Mevr. Hermans",
-    "Dhr. Mertens",
-    "Mevr. Verbeeck",
-  ];
+  const teacher = {
+    name: "Evi Vermeêren",
+    image: docentFoto,
+  };
+
+  // Aantal vakjes in het spel
+  const holes = [0, 1, 2, 3, 4, 5, 6, 7, 8];
 
   // Kleuren voor light mode en dark mode
   const colors = isEnabled
@@ -46,7 +43,7 @@ const GameScreen = ({ isEnabled }) => {
 
   // Random nieuw vakje kiezen
   const showRandomTeacher = () => {
-    const randomIndex = Math.floor(Math.random() * teachers.length);
+    const randomIndex = Math.floor(Math.random() * holes.length);
     setActiveIndex(randomIndex);
   };
 
@@ -137,7 +134,7 @@ const GameScreen = ({ isEnabled }) => {
 
       {/* Game grid */}
       <View style={styles.grid}>
-        {teachers.map((teacher, index) => (
+        {holes.map((hole, index) => (
           <Pressable
             key={index}
             style={[
@@ -151,8 +148,8 @@ const GameScreen = ({ isEnabled }) => {
           >
             {activeIndex === index ? (
               <View style={styles.teacherHead}>
-                <Text style={styles.teacherEmoji}>👨‍🏫</Text>
-                <Text style={styles.teacherName}>{teacher}</Text>
+                <Image source={teacher.image} style={styles.teacherImage} />
+                <Text style={styles.teacherName}>{teacher.name}</Text>
               </View>
             ) : (
               <Text style={[styles.emptyText, { color: colors.subText }]}>
@@ -264,9 +261,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 
-  // Emoji docent
-  teacherEmoji: {
-    fontSize: 32,
+  // Foto docent
+  teacherImage: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
     marginBottom: 4,
   },
 
