@@ -18,6 +18,7 @@ import EventDetail from "./screens/EventDetail";
 import WebshopScreen from "./screens/WebshopScreen";
 import ProductDetail from "./screens/ProductDetail";
 import ContactScreen from "./screens/ContactScreen";
+import GameScreen from "./screens/GameScreen";
 
 // Stack navigator aanmaken
 const Stack = createNativeStackNavigator();
@@ -123,6 +124,11 @@ export default function App() {
         {/* Contact scherm */}
         <Stack.Screen name="Contact">
           {(props) => <ContactScreen {...props} isEnabled={isEnabled} />}
+        </Stack.Screen>
+
+        {/* Game scherm */}
+        <Stack.Screen name="Game">
+          {(props) => <GameScreen {...props} isEnabled={isEnabled} />}
         </Stack.Screen>
       </Stack.Navigator>
     </NavigationContainer>

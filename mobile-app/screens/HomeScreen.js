@@ -505,6 +505,14 @@ const HomeScreen = ({ navigation, isEnabled, setIsEnabled }) => {
         </View>
       </View>
 
+      {/* Mini-game knop */}
+      <Pressable
+        style={[styles.contactButton, { backgroundColor: colors.accent }]}
+        onPress={() => navigation.navigate("Game")}
+      >
+        <Text style={styles.contactButtonText}>Speel mini-game</Text>
+      </Pressable>
+
       {/* CAMPUSSEN SECTIE */}
       <View style={styles.sectionHeader}>
         <Text style={[styles.sectionTitle, { color: colors.text }]}>
