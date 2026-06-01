@@ -114,7 +114,8 @@ const GameScreen = ({ isEnabled }) => {
       </Text>
 
       <Text style={[styles.subText, { color: colors.subText }]}>
-        Tik zo snel mogelijk op het hoofd van de docent en verzamel punten.
+        Tik zo snel mogelijk op het hoofd van de docent en verzamel punten. Maar
+        pas op, als je mist of te laat bent, verlies je punten!
       </Text>
 
       {/* Score en timer */}
