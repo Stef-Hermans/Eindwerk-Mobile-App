@@ -43,7 +43,13 @@ const GameScreen = ({ isEnabled }) => {
 
   // Random nieuw vakje kiezen
   const showRandomTeacher = () => {
-    const randomIndex = Math.floor(Math.random() * holes.length);
+    let randomIndex = Math.floor(Math.random() * holes.length);
+
+    // Zorgt ervoor dat de docent niet twee keer na elkaar in hetzelfde vakje zit
+    while (randomIndex === activeIndex) {
+      randomIndex = Math.floor(Math.random() * holes.length);
+    }
+
     setActiveIndex(randomIndex);
   };
 
@@ -73,7 +79,7 @@ const GameScreen = ({ isEnabled }) => {
 
     const teacherTimer = setInterval(() => {
       showRandomTeacher();
-    }, 800);
+    }, 1500);
 
     return () => clearInterval(teacherTimer);
   }, [isGameActive]);
